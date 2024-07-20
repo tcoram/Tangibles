@@ -1,27 +1,40 @@
-source Proto.tcl
+#  Tangible - A Prototype based GUI system for Tcl.
+#
+#    Author: Todd A. Coram (todd@maplefish.com) | http://www.maplefish.com
+#
+#    Copyright (c) 2001,2024 Todd A. Coram
+#    All Rights Reserved.
+#    See license.txt for details.
+
+
+lappend ::auto_path .
+namespace path {::tcl::mathop ::tcl::mathfunc}
+package require proto
 
 ::Proto::Object new: Tangible
 
-Tangible -parent {}
-Tangible -children {}
-Tangible -visible false
-Tangible -tag {}
-Tangible -id {}
-Tangible -configure {}
-Tangible -bounded true
-Tangible -lock false
-Tangible -stepTime -1
-Tangible -stepId  -1
-Tangible -boundUpperLeftX 0
-Tangible -boundUpperLeftY 0
-Tangible -boundLowerRightX 50
-Tangible -boundLowerRightY 50
-Tangible -coords {0 0 50 50}
-Tangible -defaultPopup true
-Tangible -popupList {}
-Tangible -popupMenu {}
+Tangible attrs {
+      parent {}
+      children {}
+      visible false
+      tag {}
+      id {}
+      configure {}
+      bounded true
+      lock false
+      stepTime  -1
+      stepId   -1
+      boundUpperLeftX 0
+      boundUpperLeftY 0
+      boundLowerRightX 50
+      boundLowerRightY 50
+      coords {0 0 50 50}
+      defaultPopup true
+      popupList {}
+      popupMenu {}
 
-Tangible -observers {}
+      observers {}
+}
 
 Tangible proc init {args} {
     $self -tag $self

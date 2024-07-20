@@ -1,21 +1,17 @@
 #  ::Proto - A Prototype based object system for Tcl.
 #
-#    Author: Todd A. Coram (tcoram@pobox.com) | http://www.maplefish.com
-#    $Id$
+#    Author: Todd A. Coram (todd@maplefish.com) | http://www.maplefish.com
 #
-#    Copyright (c) 2001 Todd A. Coram
+#    Copyright (c) 2001,2024 Todd A. Coram
 #    All Rights Reserved.
 #    See license.txt for details.
 
 namespace eval ::Proto {
-    variable version 0.85
+    variable version 0.9
 }
 package provide proto $::Proto::version
 
-# A Simple Prototype-based object system.
-# This is NOT a class based object system, but one based on the notion of
-# prototypes. You can emulate a class by creating an object that is used
-# only to create new objects. This object is called a "Prototype".
+# A simple, self bootstrapping, highly malleable prototype-based object system.
 #
 # All objects are created by cloning prototype objects (or any other object
 # for that matter). You get a copy of all the variables AND a reference to
@@ -23,16 +19,24 @@ package provide proto $::Proto::version
 #
 # This system supports:
 #   - instance variables (public only)
-#   - inheritance (via prototyping)
+#   - inheritance (via prototyping/cloning)
 #   - instance method renaming, overiding, addition
 #   - persistence
 #   - and all the dynamicism offered by Tcl
+#.
+# History (a 2024 update):  Why not Javascript? Why not Snit (Tcl)? Why not...?
+#    Proto was developed back in 2001; we were all inventing our own object
+#    oriented extensions back then and Snit wasn't arround. To be honest,
+#    I developed Proto with my "Tangibles" GUI system in mind and it has served
+#    there well as an experimental UI system.
+#    
+#    So here we are in 2024, I am just providing a few "tweaks" and documentation
+#    updates to Proto, with the intent of not breaking Tangibles and perhaps
+#    using it as a UI for a couple of projects that need a unique means of
+#    visualization and interacting with data.
 #
-# To Do:
-#   - Investigate Possible speedup by implementing dispatch in C?
-#
-# See the definition for "Object" at the bottom of this file for some useful
-# procs.
+#    So, for what it is worth (and perhaps not much at all), here Proto still lives,
+#    warts and all, slow but highly malleaable...  Enjoy! 
 # 
 
 namespace eval ::Proto {
@@ -62,7 +66,7 @@ namespace eval ::Proto {
 	# dispatcher.
 	#
 	set dispatcher \
-	    "proc $obj {{cmd id} args} {eval ::Proto::dispatch $obj \$cmd \$args}"
+	       "proc $obj {{cmd id} args} {eval ::Proto::dispatch $obj \$cmd \$args}"
 	eval $dispatcher;		# create dispatcher.
 	return ${obj};			# Return the object name (id).
     }
@@ -87,15 +91,13 @@ namespace eval ::Proto {
 	rename ${obj} {};		# delete private dispatcher.
     }
 
-    # The primary dispatcher for object procs. This is optimized for speed.
-    # Some of this code could have been refactored (e.g. recursion) but
-    # I wanted to keep it fast and simple for now.
+    # The primary dispatcher for object procs. This is optimized for speed.
     #
     # The basic commmands (cmd) supported:
     #
     # id                                        - Returns 'self'.
-    # @varname                                  - Fetches 'real' variable name.
-    # set varname ?value? | -varname ?value?	- Fetches or sets scalar values.
+    # @varname                                  - Fetches variable's fully qualified  name.
+    # set varname ?value? | -varname ?value?	   - Fetches or sets scalar values.
     # unset varname                             - Unset/free a scalar value.
     # proc arglist body                         - Define instance procedure.
     # info                                      - Retrieves var and proc names.
@@ -116,6 +118,7 @@ namespace eval ::Proto {
 		}
 		return ${obj}($var)
 	    }
+
 	    "set" -
 	    "-*" { 
 		if {[llength $args] > 2} {
@@ -248,7 +251,7 @@ namespace eval ::Proto {
 # The original object symbol names are stored, so you can potentially have
 # an object name clash when reloading...
 #
-::Proto::Object proc asFrozen {} {
+::Proto::Object proc dump {} {
     set result ""
     lappend result "[$self -prototype] new: [$self -name]"
     foreach attr [$self info] {
@@ -273,66 +276,11 @@ namespace eval ::Proto {
 #
 ::Proto::Object alias new new:
 
-
-# An array class.
-#
-::Proto::Object new: ::Proto::Array
-
-::Proto::Array proc init {args} {
-    $self set arrayName [$self -name]_array
-    eval array set [$self -arrayName] $args
-}
-
-::Proto::Array proc arrayName {} {
-    return [$self -arrayName]
-}
-
-::Proto::Array proc asFrozen {} {
-    set result \
-      "[$self -prototype] new: [$self -name] \{[array get [$self -arrayName]]\}"
-    return $result
-}
-
-::Proto::Array proc cleanup {} {
-    unset [$self -arrayName]
-}
-
-# THE FOLLOWING CLASS ISN'T COMPLETE AND DOES NOTHING USEFUL!!!
-
-# Filter - A class for subverting another object's proc dispatching.
-#
-::Proto::Object new: ::Proto::Filter
-
-::Proto::Filter proc init {anObj} {
-
-    # Make a clone of the object. We need this to restore (turn filtering off).
-    #
-    $anObj new: $self_$anObj
-    $self -origAttr $self_$anObj
-
-    # Now, clone the Procs for ourself.
-    #
-    $self cloneProcs $anObj
-    $self -filter false
-}
-
-
-# Proc to make a clone of the current object's procs.
-#
-::Proto::Filter proc cloneProcs {obj} {
-    foreach slotname  [$obj info]  {
-	if {[string last _P $slotname] != -1} {
-	    $self set $slotname [$obj set $slotname]
-	}
-    }
-}
-
-# Turn filtering on and off.
-#
-::Proto::Filter proc filter {trueFalse} {
-    if {$trueFalse == true} {
-	$anObj cloneProcs $self
-    } else {
-	$anObj cloneProcs [$self -origProcs]
+# Convenience:  Set a bunch of variables together. You can do this with new...
+#  Is this redundant?
+#  
+::Proto::Object proc attrs {pairs} {
+    for {set i 0} {$i < [llength $pairs]} {incr i} {
+        $self set [lindex $pairs $i] [lindex $pairs [incr i]]
     }
 }
