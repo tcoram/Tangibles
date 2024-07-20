@@ -23,8 +23,8 @@ package provide proto $::Proto::version
 #   - instance method renaming, overiding, addition
 #   - persistence
 #   - and all the dynamicism offered by Tcl
-#.
-# History (a 2024 update):  Why not Javascript? Why not Snit (Tcl)? Why not...?
+#
+# History (a 2024 update):  Why not Javascript? Why not Snit (Tcl)? Why not...?
 #    Proto was developed back in 2001; we were all inventing our own object
 #    oriented extensions back then and Snit wasn't arround. To be honest,
 #    I developed Proto with my "Tangibles" GUI system in mind and it has served
@@ -91,7 +91,7 @@ namespace eval ::Proto {
 	rename ${obj} {};		# delete private dispatcher.
     }
 
-    # The primary dispatcher for object procs. This is optimized for speed.
+    # The primary dispatcher for object procs. This is optimized for speed.
     #
     # The basic commmands (cmd) supported:
     #
@@ -284,3 +284,4 @@ namespace eval ::Proto {
         $self set [lindex $pairs $i] [lindex $pairs [incr i]]
     }
 }
+
