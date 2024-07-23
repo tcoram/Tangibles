@@ -13,6 +13,8 @@ package require proto
 
 ::Proto::Object new: Tangible
 
+# Default attributes for all objects that are "tangible".
+#
 Tangible attrs {
       parent {}
       children {}
@@ -32,10 +34,11 @@ Tangible attrs {
       defaultPopup true
       popupList {}
       popupMenu {}
-
       observers {}
 }
 
+# Default initialization for all tangibles.
+#
 Tangible proc init {args} {
     $self -tag $self
     $self -id $self
@@ -45,23 +48,34 @@ Tangible proc init {args} {
     eval $self _init $args
 }
 
+# If a tangible has its own initializations, it should override this.
+#
 Tangible proc _init {args} {
 }
 
+# Add an observer of this tanngible. An observer's notify is called
+# with the event and arguments.
+#
 Tangible proc addObserver {observer} {
     if {[lsearch [$self -observers] $observer] == -1} {
 	lappend [$self @observers] $observer
     }
 }
 
+# Remove an observer.
+#
 Tangible proc removeObserver {observer} {
     set index [lsearch [$self -observers] $observer]
     $self -observers [lreplace [$self -observers] $index $index]
 }
-    
+
+# Override this if you want to be notified.
+#  
 Tangible proc notify {fromObj event} {
 }
 
+# Notify all of a tangible's observers.
+#
 Tangible proc broadcast {event args} {
     foreach observer [$self -observers] {
 	$observer notify $self $event $args
@@ -69,7 +83,8 @@ Tangible proc broadcast {event args} {
 
 }
 
-
+# Set your bounding box (area you own for mouse events, etc)
+#
 Tangible proc boundBox {args} {
     if {$args != {}} {
 	if {[llength $args] < 4} {
@@ -84,6 +99,8 @@ Tangible proc boundBox {args} {
 		[$self -boundLowerRightX] [$self -boundLowerRightY]]
 }
 
+# Destroy a tangible.
+#
 Tangible proc cleanup {} {
     if {[$self -stepId] != -1} {
 	after cancel [$self -stepId]
@@ -94,9 +111,13 @@ Tangible proc cleanup {} {
     [$self -canvas] delete withtag $self
 }
 
+# Override this if you want to do something on very clock "tick"
+#
 Tangible proc step {} {
 }
 
+# Set your clock tick
+#
 Tangible proc stepTime {{value ""}} {
     if {$value != ""} {
 	$self -stepTime $value
@@ -112,11 +133,15 @@ Tangible proc restartStepper {} {
     }
 }
 
+# Draw yourself.
+#
 Tangible proc drawBody {} {
     set canvas [$self -canvas]
     $self create rectangle [$self -coords] -fill lightblue
 }
 
+# Make copy of yourself.
+#
 Tangible proc clone {} {
     set obj [$self new]
     $obj -visible false
@@ -431,7 +456,7 @@ Tangible proc do_options {opts arglist} {
 }
 
 ###########################################################
-# Tangibles
+# Tangible Widgets
 
 Tangible new: Canvas
 
@@ -585,20 +610,6 @@ DigitalClock proc step {} {
 }
 
 
-set observer1 [Text new: {}  "Observer"]
-$observer1 proc notify {obj event args} {
-    if {$event == "clone"} {
-	set obj [lindex $args 0]
-	$obj addObserver $self
-    }
-    $self configure -text "$event: [$obj -name] ([$obj -prototype])"
-}
-$observer1 proc M_rescan {} {
-    foreach child [[$self -parent] -children] {
-	$child addObserver $self
-    }
-}
-
 Oval new: Cloner -width 10 10
 Cloner configure -fill orange -outline black -width 2
 Cloner -defaultPopup false
@@ -612,60 +623,4 @@ Cloner proc collect {obj} {
 	$self addToMenu "New $proto" "\[$child clone] moveTo [$self -boundLowerRightX] [$self -boundLowerRightY]"
 	lappend cloned $proto
     }
-}
-
-###########################################################################
-# Test
-
-set rect1 [Rectangle new {} -width 100 -height 100]
-
-$rect1 -stepTime 500
-
-$rect1 proc M_No_Flashing_Checkbutton {} {
-    if {[$self -stepTime] == -1 } {
-	$self -stepTime 500
-	$self restartStepper
-    } else {
-	$self -stepTime -1
-    }
-}
-
-$rect1 proc step {} {
-    set color [$self -color]
-     $self configure -fill $color
-    if {$color == "red"} {
-	$self -color green
-    } else {
-	$self -color red
-    }
-}
-
-set oval1 [Oval new {} -width 100 -height 100]
-
-set text1 [Text new: {} "Hello World. Edit me."]
-$text1 -editable true
-
-set clock1 [DigitalClock new]
-
-canvas .c -width 640 -height 480
-pack .c
-
-$oval1 configure -fill blue
-$rect1 configure -fill red
-
-eval set canvas1 [Canvas new {} -width 640 -height 480]
-$canvas1 drawOn .c
-$canvas1 add $rect1 100 100
-$canvas1 add $oval1 200 200
-$canvas1 add $clock1 300 300
-$rect1 add $text1 0 0
-
-set cloner1 [Cloner new]
-$canvas1 add $cloner1 10 10
-$canvas1 add $observer1 500 435
-$cloner1 collect $canvas1
-$canvas1 add [Text new: {} "<-- Right click on the *Cloner*..."] 25 10
-
-foreach child [$canvas1 -children] {
-    $child addObserver $observer1
 }
