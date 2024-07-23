@@ -69,6 +69,3 @@ $canvas1 add [Text new: {} "<-- Right click on the *Cloner*..."] 25 10
 foreach child [$canvas1 -children] {
     $child addObserver $observer1
 }
-
-$canvas1 dump
-$text1 dump
