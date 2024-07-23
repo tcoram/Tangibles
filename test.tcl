@@ -70,3 +70,5 @@ foreach child [$canvas1 -children] {
     $child addObserver $observer1
 }
 
+$canvas1 dump
+$text1 dump

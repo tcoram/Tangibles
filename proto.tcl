@@ -264,7 +264,7 @@ namespace eval ::Proto {
 	# Check to see if attr holds another object, otherwise append.
 	#
 	if {[::Proto::isObj $val]} {
-	    lappend result "[$val asFrozen]"
+	    lappend result "[$val dump]"
 	} 
 	lappend result "$self set $attr $val"
     }
