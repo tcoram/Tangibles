@@ -635,12 +635,21 @@ Pushbutton -defaultPopup false
 Pushbutton -lock true
 Pushbutton configure -fill white -outline black -width 2
 
-Pushbutton proc handlesMouseOver {} {
+Pushbutton proc mouseDown {aWindow aButton x y} {
+    set canvas [$self -canvas]
+    if {$aButton == 1} {
+	$self broadcast "mouseDown"
+	$self -evnt(x) [$canvas canvasx $x]
+	$self -evnt(y) [$canvas canvasy $y]
+    } 
+}
+
+Pushbutton proc mouseEnter {aWindow x y} {
     $self configure -fill red
     return true
 }
 
-Pushbutton proc handlesMouseDown {} {
+Pushbutton proc mouseLeave {aWindow x y} {
     $self configure -fill white
     return true
 }
