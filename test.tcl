@@ -62,7 +62,7 @@ $canvas1 drawOn .c
 $canvas1 add $rect1 100 100
 $canvas1 add $oval1 200 200
 $canvas1 add $clock1 300 300
-$canvas1 add [Pushbutton new] 150 150
+# $canvas1 add [Pushbutton new] 150 150
 $canvas1 add [Pushbutton new] 750 550
 $rect1 add $text1 0 0
 
