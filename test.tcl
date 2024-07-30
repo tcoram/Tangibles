@@ -47,19 +47,39 @@ $text1 -editable true
 
 set clock1 [DigitalClock new]
 
-canvas .c -width 640 -height 480
+# wm attributes . -fullscreen 1
+. configure -bg white
+
+canvas .c -width 800 -height 600
 pack .c
 
 $oval1 configure -fill blue
 $rect1 configure -fill red
 
-eval set canvas1 [Canvas new {} -width 640 -height 480]
+set canvas1 [Canvas new {} -width 800 -height 600]
+
 $canvas1 drawOn .c
 $canvas1 add $rect1 100 100
 $canvas1 add $oval1 200 200
 $canvas1 add $clock1 300 300
+$canvas1 add [Pushbutton new] 150 150
+$canvas1 add [Pushbutton new] 750 550
 $rect1 add $text1 0 0
 
+Oval new: Cloner -width 10 10
+Cloner configure -fill orange -outline black -width 2
+Cloner -defaultPopup false
+Cloner -lock true
+Cloner proc collect {obj} {
+    set cloned {}
+    foreach child [$obj -children] {
+	set proto [$child -prototype]
+	if {$proto == "::Cloner"}  continue
+	if {[lsearch $cloned $proto] != -1} continue;# no duplicates
+	$self addToMenu "New $proto" "\[$child clone] moveTo [$self -boundLowerRightX] [$self -boundLowerRightY]"
+	lappend cloned $proto
+    }
+}
 set cloner1 [Cloner new]
 $canvas1 add $cloner1 10 10
 $canvas1 add $observer1 500 435
@@ -69,3 +89,5 @@ $canvas1 add [Text new: {} "<-- Right click on the *Cloner*..."] 25 10
 foreach child [$canvas1 -children] {
     $child addObserver $observer1
 }
+
+

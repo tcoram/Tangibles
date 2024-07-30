@@ -159,7 +159,8 @@ Tangible proc raise {} {
     [$self -canvas] raise $self
 }
 
-
+# Place yourself onto a canvas and set your events/stepper.
+#
 Tangible proc drawOn {aCanvas} {
     $self -canvas $aCanvas
     $self createMenu
@@ -185,14 +186,20 @@ Tangible proc drawOn {aCanvas} {
     return $self
 }
 
+# Do we want mouse down events?
+#
 Tangible proc handlesMouseDown {} {
     return true
 }
 
+# Do we want mouse over events?
+#
 Tangible proc handlesMouseOver {} {
     return true
 }
 
+# Do we want mouse drag events?
+#
 Tangible proc handlesMouseDrag {} {
     return true
 }
@@ -219,6 +226,8 @@ Tangible proc bindMouseEvents {toWhat} {
     }
 }
 
+# if we want mouse down events, this is the default behavior
+#
 Tangible proc mouseDown {aWindow aButton x y} {
     set canvas [$self -canvas]
     if {$aButton == 1} {
@@ -230,6 +239,8 @@ Tangible proc mouseDown {aWindow aButton x y} {
     }
 }
 
+# if we want mouse up events, this is the default behavior
+# 
 Tangible proc mouseUp {aWindow aButton x y} {
     $self broadcast "mouseUp"
     set canvas [$self -canvas]
@@ -246,6 +257,9 @@ Tangible proc mouseUp {aWindow aButton x y} {
 	$self dropOn $target
     }
 }
+
+# Default behavior when we are "dropped" onto another Tangible... we reparent.
+#
 Tangible proc dropOn {obj} {
     if {[$obj acceptDrop $self]} {
 	set old_parent [$self -parent]
@@ -256,10 +270,14 @@ Tangible proc dropOn {obj} {
     }
 }
 
+# Do we accept being dropped on?
+#
 Tangible proc acceptDrop {obj} {
     return false
 }
 
+# Default behavior for entering/leaving...
+#
 Tangible proc mouseEnter {aWindow x y} {
 	$self broadcast "mouseEnter"
 }
@@ -524,6 +542,7 @@ Text proc _restore {} {
 }
 
 
+
 Tangible new: BoxShape
 BoxShape proc _init {args} {
     return [$self do_options {\
@@ -609,18 +628,19 @@ DigitalClock proc step {} {
     $self configure -text [clock format [clock sec] -format [$self -format]]
 }
 
+Oval new: Pushbutton -width 20 20
+Pushbutton -defaultPopup false
 
-Oval new: Cloner -width 10 10
-Cloner configure -fill orange -outline black -width 2
-Cloner -defaultPopup false
-Cloner -lock true
-Cloner proc collect {obj} {
-    set cloned {}
-    foreach child [$obj -children] {
-	set proto [$child -prototype]
-	if {$proto == "::Cloner"}  continue
-	if {[lsearch $cloned $proto] != -1} continue;# no duplicates
-	$self addToMenu "New $proto" "\[$child clone] moveTo [$self -boundLowerRightX] [$self -boundLowerRightY]"
-	lappend cloned $proto
-    }
+
+Pushbutton -lock true
+Pushbutton configure -fill white -outline black -width 2
+
+Pushbutton proc handlesMouseOver {} {
+    $self configure -fill red
+    return true
+}
+
+Pushbutton proc handlesMouseDown {} {
+    $self configure -fill white
+    return true
 }
