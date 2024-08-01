@@ -111,7 +111,7 @@ Tangible proc cleanup {} {
     [$self -canvas] delete withtag $self
 }
 
-# Override this if you want to do something on very clock "tick"
+# Override this if you want to do something on every clock "tick"
 #
 Tangible proc step {} {
 }
@@ -133,7 +133,7 @@ Tangible proc restartStepper {} {
     }
 }
 
-# Draw yourself.
+# Draw yourself. All tangibles draw onto a tk canvas.  Override this.
 #
 Tangible proc drawBody {} {
     set canvas [$self -canvas]
@@ -159,7 +159,7 @@ Tangible proc raise {} {
     [$self -canvas] raise $self
 }
 
-# Place yourself onto a canvas and set your events/stepper.
+# Attach yourself to a canvas and set your events/stepper.
 #
 Tangible proc drawOn {aCanvas} {
     $self -canvas $aCanvas
@@ -204,6 +204,8 @@ Tangible proc handlesMouseDrag {} {
     return true
 }
 
+# Call the default mouse events.
+#
 Tangible proc bindMouseEvents {toWhat} {
     set canvas [$self -canvas]
     if {[$self handlesMouseDown]} {
@@ -226,7 +228,7 @@ Tangible proc bindMouseEvents {toWhat} {
     }
 }
 
-# if we want mouse down events, this is the default behavior
+# if we want mouse down events, this is the default behavior, Override as needed.
 #
 Tangible proc mouseDown {aWindow aButton x y} {
     set canvas [$self -canvas]
@@ -237,6 +239,32 @@ Tangible proc mouseDown {aWindow aButton x y} {
     } elseif {$aButton == 3} {
 	tk_popup [$self -popupMenu] $x $y
     }
+}
+
+
+# Default behavior for entering/leaving...
+#
+Tangible proc mouseEnter {aWindow x y} {
+	$self broadcast "mouseEnter"
+}
+Tangible proc mouseLeave {aWindow x y} {
+	$self broadcast "mouseLeave"
+}
+
+Tangible proc mouseDrag {aWindow x y} {
+    if {[$self -lock]} {
+	return false
+    }
+    set canvas [$self -canvas]
+    set ax [$canvas canvasx $x]
+    set ay [$canvas canvasx $y]
+    set new_x [expr {$ax-[$self -evnt(x)]}]
+    set new_y [expr {$ay-[$self -evnt(y)]}]
+    $self move $new_x $new_y
+    $self -evnt(x) $ax
+    $self -evnt(y) $ay
+    $canvas raise $self
+    return true
 }
 
 # if we want mouse up events, this is the default behavior
@@ -275,32 +303,6 @@ Tangible proc dropOn {obj} {
 Tangible proc acceptDrop {obj} {
     return false
 }
-
-# Default behavior for entering/leaving...
-#
-Tangible proc mouseEnter {aWindow x y} {
-	$self broadcast "mouseEnter"
-}
-Tangible proc mouseLeave {aWindow x y} {
-	$self broadcast "mouseLeave"
-}
-
-Tangible proc mouseDrag {aWindow x y} {
-    if {[$self -lock]} {
-	return false
-    }
-    set canvas [$self -canvas]
-    set ax [$canvas canvasx $x]
-    set ay [$canvas canvasx $y]
-    set new_x [expr {$ax-[$self -evnt(x)]}]
-    set new_y [expr {$ay-[$self -evnt(y)]}]
-    $self move $new_x $new_y
-    $self -evnt(x) $ax
-    $self -evnt(y) $ay
-    $canvas raise $self
-    return true
-}
-
 Tangible proc createMenu {} {
     $self -popupMenu .popup[$self -name]
     uplevel \#0 "menu [$self -popupMenu] -tearoff 0"
@@ -363,6 +365,8 @@ Tangible proc moveTo {x y} {
     }
 }
 
+# Add an object (as a child) to this Tangible and draw it if visible.
+#
 Tangible proc add {obj x y args} {
     $obj parent $self
     if {![$obj -visible]} {
@@ -378,6 +382,8 @@ Tangible proc add {obj x y args} {
 		    -unbounded - {$obj -bounded false}} $args
 }
 
+# Remove an object from this Tangilble.
+#
 Tangible proc remove {obj} {
     set index [lsearch [$self -children] $obj]
     if {$index != -1} {
@@ -627,6 +633,7 @@ DigitalClock proc step {} {
     $self stepTime 1000
     $self configure -text [clock format [clock sec] -format [$self -format]]
 }
+
 
 Oval new: Pushbutton -width 20 20
 Pushbutton -defaultPopup false
